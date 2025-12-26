@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Calculator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h1>Finance<br />Calculator</h1>
+        </div>
+        <nav class="sidebar-nav">
+          <ul>
+            <li><a href="#home" class="active">Home</a></li>
+            <li>
+              <a href="#all-use" class="all-use-link">All Calculators Use</a>
+            </li>
+            <li><a href="#sip">SIP Calculator</a></li>
+            <li><a href="#mutual-fund">Mutual Fund Calculator</a></li>
+            <li><a href="#capital-gain">Capital Gain Tax Calculator</a></li>
+            <li><a href="#emi">EMI Calculator</a></li>
+            <li><a href="#fd">FD Calculator</a></li>
+            <li><a href="#real-estate">Real Estate Return Calculator</a></li>
+          </ul>
+        </nav>
+      </aside>
+      <main class="main-content">
+        <header class="main-header">
+          <h2 id="main-title">Welcome to the Finance Calculator!</h2>
+        </header>
+        <section class="content" id="calculator-content">
+          <div
+            id="home-content-grid"
+            class="calculator-grid calculator-page-content"
+          >
+            <div class="calculator-card">
+              <h3>SIP Calculator</h3>
+              <p>
+                Calculate the future value of your SIP (Systematic Investment
+                Plan) investments. Enter your monthly investment amount,
+                expected annual return rate, and the investment period in years.
+              </p>
+              <a href="#sip">Go to Calculator</a>
+            </div>
+            <div class="calculator-card">
+              <h3>Mutual Fund Calculator</h3>
+              <p>
+                Estimate the returns on your mutual fund investments. Provide
+                the initial investment, monthly investment, expected annual
+                return rate, and the investment period.
+              </p>
+              <a href="#mutual-fund">Go to Calculator</a>
+            </div>
+            <div class="calculator-card">
+              <h3>Capital Gain Tax Calculator</h3>
+              <p>
+                Calculate the capital gain tax on your investments. Enter the
+                purchase price, sell price, and the type of investment
+                (short-term or long-term).
+              </p>
+              <a href="#capital-gain">Go to Calculator</a>
+            </div>
+            <div class="calculator-card">
+              <h3>EMI Calculator</h3>
+              <p>
+                Calculate your Equated Monthly Installment (EMI) for loans.
+                Enter the loan amount, annual interest rate, and the loan tenure
+                in years.
+              </p>
+              <a href="#emi">Go to Calculator</a>
+            </div>
+            <div class="calculator-card">
+              <h3>FD Calculator</h3>
+              <p>
+                Calculate the maturity amount of your Fixed Deposit (FD). Enter
+                the principal amount, annual interest rate, and the investment
+                period in years.
+              </p>
+              <a href="#fd">Go to Calculator</a>
+            </div>
+            <div class="calculator-card">
+              <h3>Real Estate Return Calculator</h3>
+              <p>
+                Estimate the returns on your real estate investments. Enter the
+                purchase price, sell price, and the holding period in years.
+              </p>
+              <a href="#real-estate">Go to Calculator</a>
+            </div>
+          </div>
+
+          <div
+            id="sip-page-content"
+            class="calculator-page-content"
+            style="display: none"
+          >
+            <form id="sip-form">
+              <div class="form-group">
+                <label for="monthly-investment">Monthly Investment (₹):</label>
+                <input type="number" id="monthly-investment" required />
+              </div>
+              <div class="form-group">
+                <label for="interest-rate"
+                  >Expected Annual Return Rate (%):</label
+                >
+                <input type="number" id="interest-rate" required />
+              </div>
+              <div class="form-group">
+                <label for="investment-years">Investment Period (Years):</label>
+                <input
+                  type="number"
+                  id="investment-years"
+                  step="1"
+                  min="0"
+                  value="0"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="investment-months"
+                  >Investment Period (Months):</label
+                >
+                <input
+                  type="number"
+                  id="investment-months"
+                  step="1"
+                  min="0"
+                  max="11"
+                  value="0"
+                  required
+                />
+              </div>
+              <button type="submit">Calculate</button>
+            </form>
+            <div id="sip-result"></div>
+          </div>
+          <div
+            id="mutual-fund-page-content"
+            class="calculator-page-content"
+            style="display: none"
+          >
+            <form id="mutual-fund-form">
+              <div class="form-group">
+                <label for="initial-investment">Initial Investment (₹):</label>
+                <input type="number" id="initial-investment" required />
+              </div>
+              <div class="form-group">
+                <label for="mf-monthly-investment"
+                  >Monthly Investment (₹):</label
+                >
+                <input type="number" id="mf-monthly-investment" required />
+              </div>
+              <div class="form-group">
+                <label for="mf-interest-rate"
+                  >Expected Annual Return Rate (%):</label
+                >
+                <input type="number" id="mf-interest-rate" required />
+              </div>
+              <div class="form-group">
+                <label for="mf-investment-years"
+                  >Investment Period (Years):</label
+                >
+                <input
+                  type="number"
+                  id="mf-investment-years"
+                  step="1"
+                  min="0"
+                  value="0"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="mf-investment-months"
+                  >Investment Period (Months):</label
+                >
+                <input
+                  type="number"
+                  id="mf-investment-months"
+                  step="1"
+                  min="0"
+                  max="11"
+                  value="0"
+                  required
+                />
+              </div>
+              <button type="submit">Calculate</button>
+            </form>
+            <div id="mutual-fund-result"></div>
+          </div>
+          <div
+            id="capital-gain-page-content"
+            class="calculator-page-content"
+            style="display: none"
+          >
+            <form id="capital-gain-form">
+              <div class="form-group">
+                <label for="cg-purchase-price">Purchase Price (₹):</label>
+                <input type="number" id="cg-purchase-price" required />
+              </div>
+              <div class="form-group">
+                <label for="cg-sell-price">Sell Price (₹):</label>
+                <input type="number" id="cg-sell-price" required />
+              </div>
+              <div class="form-group">
+                <label for="investment-type">Investment Type:</label>
+                <select id="investment-type">
+                  <option value="short-term">Short Term (<= 1 year)</option>
+                  <option value="long-term">Long Term (> 1 year)</option>
+                </select>
+              </div>
+              <button type="submit">Calculate</button>
+            </form>
+            <div id="capital-gain-result"></div>
+          </div>
+          <div
+            id="emi-page-content"
+            class="calculator-page-content"
+            style="display: none"
+          >
+            <form id="emi-form">
+              <div class="form-group">
+                <label for="loan-amount">Loan Amount (₹):</label>
+                <input type="number" id="loan-amount" required />
+              </div>
+              <div class="form-group">
+                <label for="emi-interest-rate">Annual Interest Rate (%):</label>
+                <input type="number" id="emi-interest-rate" required />
+              </div>
+              <div class="form-group">
+                <label for="loan-tenure-years">Loan Tenure (Years):</label>
+                <input
+                  type="number"
+                  id="loan-tenure-years"
+                  step="1"
+                  min="0"
+                  value="0"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="loan-tenure-months">Loan Tenure (Months):</label>
+                <input
+                  type="number"
+                  id="loan-tenure-months"
+                  step="1"
+                  min="0"
+                  max="11"
+                  value="0"
+                  required
+                />
+              </div>
+              <button type="submit">Calculate</button>
+            </form>
+            <div id="emi-result"></div>
+          </div>
+          <div
+            id="fd-page-content"
+            class="calculator-page-content"
+            style="display: none"
+          >
+            <form id="fd-form">
+              <div class="form-group">
+                <label for="principal-amount">Principal Amount (₹):</label>
+                <input type="number" id="principal-amount" required />
+              </div>
+              <div class="form-group">
+                <label for="fd-interest-rate">Annual Interest Rate (%):</label>
+                <input type="number" id="fd-interest-rate" required />
+              </div>
+              <div class="form-group">
+                <label for="fd-investment-years"
+                  >Investment Period (Years):</label
+                >
+                <input
+                  type="number"
+                  id="fd-investment-years"
+                  step="1"
+                  min="0"
+                  value="0"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="fd-investment-months"
+                  >Investment Period (Months):</label
+                >
+                <input
+                  type="number"
+                  id="fd-investment-months"
+                  step="1"
+                  min="0"
+                  max="11"
+                  value="0"
+                  required
+                />
+              </div>
+              <button type="submit">Calculate</button>
+            </form>
+            <div id="fd-result"></div>
+          </div>
+          <div
+            id="real-estate-page-content"
+            class="calculator-page-content"
+            style="display: none"
+          >
+            <form id="real-estate-form">
+              <div class="form-group">
+                <label for="re-purchase-price">Purchase Price (₹):</label>
+                <input type="number" id="re-purchase-price" required />
+              </div>
+              <div class="form-group">
+                <label for="re-sell-price">Sell Price (₹):</label>
+                <input type="number" id="re-sell-price" required />
+              </div>
+              <div class="form-group">
+                <label for="re-holding-years">Holding Period (Years):</label>
+                <input
+                  type="number"
+                  id="re-holding-years"
+                  step="1"
+                  min="0"
+                  value="0"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="re-holding-months">Holding Period (Months):</label>
+                <input
+                  type="number"
+                  id="re-holding-months"
+                  step="1"
+                  min="0"
+                  max="11"
+                  value="0"
+                  required
+                />
+              </div>
+              <button type="submit">Calculate</button>
+            </form>
+            <div id="real-estate-result"></div>
+          </div>
+          <div
+            id="all-use-page-content"
+            class="calculator-page-content"
+            style="display: none"
+          >
+            <h2>How to Use All Calculators</h2>
+            <p>
+              Welcome to the comprehensive guide for our Finance Calculator
+              suite! Below you'll find details, examples, and expected answers
+              for each of our financial tools.
+            </p>
+
+            <div class="calculator-grid">
+              <!-- SIP Calculator Use Card -->
+              <div class="calculator-card all-use-card">
+                <h3>SIP Calculator (Systematic Investment Plan)</h3>
+                <p>
+                  Use this to estimate the future value of your regular
+                  investments. Enter your monthly investment amount, expected
+                  annual return rate, and the investment period.
+                </p>
+                <h4>Inputs:</h4>
+                <ul>
+                  <li>
+                    <b>Monthly Investment:</b> Enter the fixed amount you plan
+                    to invest every month.
+                  </li>
+                  <li>
+                    <b>Expected Annual Return Rate:</b> Input the annual
+                    interest rate you anticipate earning (e.g., 12 for 12%).
+                  </li>
+                  <li>
+                    <b>Investment Period (Years/Months):</b> Specify the total
+                    duration of your investment using separate fields for years
+                    and months.
+                  </li>
+                </ul>
+                <h4>Example:</h4>
+                <p>
+                  If you invest ₹5,000 monthly, expect 12% annual return for 5
+                  years and 6 months:
+                </p>
+                <ul>
+                  <li>Monthly Investment: 5000</li>
+                  <li>Expected Annual Return Rate: 12</li>
+                  <li>Investment Period (Years): 5</li>
+                  <li>Investment Period (Months): 6</li>
+                </ul>
+                <h4>Expected Answer Format:</h4>
+                <p>
+                  The calculator will show you the total amount invested,
+                  estimated returns, and the total value of your investment at
+                  maturity. e.g., Invested Amount: ₹3,30,000, Estimated Returns:
+                  ₹1,52,538, Total Value: ₹4,82,538
+                </p>
+              </div>
+              <!-- Mutual Fund Calculator Use Card -->
+              <div class="calculator-card all-use-card">
+                <h3>Mutual Fund Calculator</h3>
+                <p>
+                  This calculator helps you project returns from both lump sum
+                  and systematic investments in mutual funds.
+                </p>
+                <h4>Inputs:</h4>
+                <ul>
+                  <li>
+                    <b>Initial Investment:</b> The one-time lump sum you invest
+                    at the start.
+                  </li>
+                  <li>
+                    <b>Monthly Investment:</b> The regular monthly amount you
+                    invest (like an SIP).
+                  </li>
+                  <li>
+                    <b>Expected Annual Return Rate:</b> Your anticipated annual
+                    interest rate.
+                  </li>
+                  <li>
+                    <b>Investment Period (Years/Months):</b> The total duration
+                    of your investment in separate years and months fields.
+                  </li>
+                </ul>
+                <h4>Example:</h4>
+                <p>
+                  Initial ₹10,000, monthly ₹2,000, 15% annual return for 3 years
+                  and 9 months:
+                </p>
+                <ul>
+                  <li>Initial Investment: 10000</li>
+                  <li>Monthly Investment: 2000</li>
+                  <li>Expected Annual Return Rate: 15</li>
+                  <li>Investment Period (Years): 3</li>
+                  <li>Investment Period (Months): 9</li>
+                </ul>
+                <h4>Expected Answer Format:</h4>
+                <p>
+                  It provides total investment, estimated returns, and the
+                  overall maturity value. e.g., Invested Amount: ₹95,000,
+                  Estimated Returns: ₹21,684, Total Value: ₹1,16,684
+                </p>
+              </div>
+              <!-- Capital Gain Tax Calculator Use Card -->
+              <div class="calculator-card all-use-card">
+                <h3>Capital Gain Tax Calculator</h3>
+                <p>
+                  Calculate the potential tax liability on the profit from
+                  selling an asset.
+                </p>
+                <h4>Inputs:</h4>
+                <ul>
+                  <li>
+                    <b>Purchase Price:</b> The original price you paid for the
+                    asset.
+                  </li>
+                  <li>
+                    <b>Sell Price:</b> The price at which you sold the asset.
+                  </li>
+                  <li>
+                    <b>Investment Type:</b> Select 'Short Term' (held for <= 1
+                    year) or 'Long Term' (held for > 1 year). Tax rules differ
+                    for these categories.
+                  </li>
+                </ul>
+                <h4>Example:</h4>
+                <p>Purchased for ₹1,00,000, sold for ₹1,20,000 (Short Term):</p>
+                <ul>
+                  <li>Purchase Price: 100000</li>
+                  <li>Sell Price: 120000</li>
+                  <li>Investment Type: Short Term</li>
+                </ul>
+                <h4>Expected Answer Format:</h4>
+                <p>
+                  The calculator will determine your capital gain, any taxable
+                  portion, and the tax payable. e.g., Capital Gain: ₹20,000,
+                  Taxable Gain: ₹20,000, Tax Payable: ₹3,000
+                </p>
+              </div>
+              <!-- EMI Calculator Use Card -->
+              <div class="calculator-card all-use-card">
+                <h3>EMI Calculator (Equated Monthly Installment)</h3>
+                <p>Figure out your monthly loan payments and total interest.</p>
+                <h4>Inputs:</h4>
+                <ul>
+                  <li>
+                    <b>Loan Amount:</b> The total principal amount of the loan.
+                  </li>
+                  <li>
+                    <b>Annual Interest Rate:</b> The yearly interest rate on the
+                    loan.
+                  </li>
+                  <li>
+                    <b>Loan Tenure (Years/Months):</b> The total duration over
+                    which you will repay the loan, in separate years and months.
+                  </li>
+                </ul>
+                <h4>Example:</h4>
+                <p>
+                  Loan of ₹5,00,000, 10% annual interest for 2 years and 3
+                  months:
+                </p>
+                <ul>
+                  <li>Loan Amount: 500000</li>
+                  <li>Annual Interest Rate: 10</li>
+                  <li>Loan Tenure (Years): 2</li>
+                  <li>Loan Tenure (Months): 3</li>
+                </ul>
+                <h4>Expected Answer Format:</h4>
+                <p>
+                  It will provide your EMI, total interest payable, and the
+                  total amount to be paid. e.g., Loan EMI: ₹22,965, Total
+                  Interest Payable: ₹1,16,600, Total Payment (Principal +
+                  Interest): ₹6,16,600
+                </p>
+              </div>
+              <!-- FD Calculator Use Card -->
+              <div class="calculator-card all-use-card">
+                <h3>FD Calculator (Fixed Deposit)</h3>
+                <p>
+                  Estimate the maturity value and interest earned on your Fixed
+                  Deposits.
+                </p>
+                <h4>Inputs:</h4>
+                <ul>
+                  <li>
+                    <b>Principal Amount:</b> The initial amount you deposit.
+                  </li>
+                  <li>
+                    <b>Annual Interest Rate:</b> The annual interest rate
+                    offered by the bank.
+                  </li>
+                  <li>
+                    <b>Investment Period (Years/Months):</b> The duration of
+                    your FD, in separate years and months.
+                  </li>
+                </ul>
+                <h4>Example:</h4>
+                <p>
+                  Principal ₹1,00,000, 7% annual interest for 4 years and 0
+                  months:
+                </p>
+                <ul>
+                  <li>Principal Amount: 100000</li>
+                  <li>Annual Interest Rate: 7</li>
+                  <li>Investment Period (Years): 4</li>
+                  <li>Investment Period (Months): 0</li>
+                </ul>
+                <h4>Expected Answer Format:</h4>
+                <p>
+                  See your principal, earned interest, and the final maturity
+                  value. e.g., Principal Amount: ₹1,00,000, Interest Earned:
+                  ₹31,079.60, Maturity Value: ₹1,31,079.60
+                </p>
+              </div>
+              <!-- Real Estate Return Calculator Use Card -->
+              <div class="calculator-card all-use-card">
+                <h3>Real Estate Return Calculator</h3>
+                <p>Analyze the returns from your real estate investments.</p>
+                <h4>Inputs:</h4>
+                <ul>
+                  <li>
+                    <b>Purchase Price:</b> The price you bought the property
+                    for.
+                  </li>
+                  <li>
+                    <b>Sell Price:</b> The price you sold or expect to sell the
+                    property for.
+                  </li>
+                  <li>
+                    <b>Holding Period (Years/Months):</b> The duration you held
+                    or plan to hold the property, in separate years and months.
+                  </li>
+                </ul>
+                <h4>Example:</h4>
+                <p>
+                  Purchased for ₹50,00,000, sold for ₹65,00,000 after 3 years
+                  and 6 months:
+                </p>
+                <ul>
+                  <li>Purchase Price: 5000000</li>
+                  <li>Sell Price: 6500000</li>
+                  <li>Holding Period (Years): 3</li>
+                  <li>Holding Period (Months): 6</li>
+                </ul>
+                <h4>Expected Answer Format:</h4>
+                <p>
+                  This calculator will show you the absolute return and the
+                  annualized return percentage. e.g., Absolute Return: 30.00%,
+                  Annualized Return: 7.74%
+                </p>
+              </div>
+            </div>
+            <p style="margin-top: 2rem">
+              Use these guidelines to effectively utilize each calculator and
+              make informed financial decisions!
+            </p>
+          </div>
+          <style>
+            .all-use-card {
+              margin-bottom: 2rem; /* Add some space between the cards */
+            }
+          </style>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

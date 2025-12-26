@@ -1,4 +1,3 @@
-
 **Web Development Projects**
 ========================================
 
@@ -60,3 +59,5 @@ Contributions & next steps
 License & reuse
 ----------------
 - These are learning projects — reuse and modify freely. If you'd like a specific license added (MIT, Apache, etc.), tell me which one.
+=======
+
