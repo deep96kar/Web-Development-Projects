@@ -20,6 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let page = hash.substring(1) || "home";
     hideAllCalculatorPages(); // Hide all calculator pages and home grid first
 
+
+    
+
     if (page === "home") {
       mainTitle.textContent = "Welcome to the Finance Calculator!";
       document.getElementById("home-content-grid").style.display = "grid"; // Show the home content grid
