@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+html {
+  font-size: 14px;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Hide scrollbars (scroll still works) */
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+@layer components {
+  .ui-page-section {
+    @apply max-w-300 mx-auto px-6 lg:px-10 pt-36;
+  }
+
+  .ui-img-round {
+    @apply block rounded-full mx-auto;
+  }
+
+  .ui-input {
+    @apply w-full max-w-md px-4 py-2 rounded-full bg-white/90 text-gray-900 placeholder:text-gray-500 border border-black/10 focus:outline-none focus:ring-2 focus:ring-pink-400;
+  }
+
+  .ui-input-dark {
+    @apply w-full max-w-md px-4 py-2 rounded-full bg-white/10 text-yellow-100 placeholder:text-yellow-200/70 border border-yellow-200/20 focus:outline-none focus:ring-2 focus:ring-yellow-300;
+  }
+
+  .ui-btn-primary {
+    @apply inline-flex items-center justify-center rounded-full font-semibold px-5 py-2 bg-gray-900 text-white;
+  }
+
+  .ui-btn-accent {
+    @apply inline-flex items-center justify-center rounded-full font-semibold px-5 py-2 bg-pink-300 text-gray-900;
+  }
+}

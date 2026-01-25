@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modern Circular Clock</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html,body { height: 100%; }
+        body {
+            background: #1c1c1c;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            padding: 32px;
+        }
+        .container { text-align: center; }
+        h1 { font-weight: 300; margin-bottom: 28px; }
+        .clock {
+            position: relative;
+            width: 420px;
+            height: 420px;
+            margin: 0 auto;
+        }
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(180,180,180,0.08);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            pointer-events: none;
+            transform-origin: 50% 50%;
+            transition: transform 900ms cubic-bezier(.22,.8,.36,1);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        .month-ring { width: 400px; height: 400px; }
+        .date-ring { width: 400px; height: 400px; }
+        /* style for all labels placed around rings */
+        .ring span {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform-origin: 0 0;
+            white-space: nowrap;
+            color: #cfcfcf;
+            font-size: 13px;
+            letter-spacing: 2px;
+            user-select: none;
+            opacity: 0.95;
+            transition: color 400ms, transform 400ms, font-size 300ms;
+            text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+        }
+        /* slightly smaller for date numbers */
+        .date-ring span { font-size: 12px; letter-spacing: 1px; }
+        .center {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.02), rgba(0,0,0,0.7));
+            border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%,-50%);
+            display:flex; flex-direction: column; align-items:center; justify-content:center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7), inset 0 2px 12px rgba(255,255,255,0.02);
+            pointer-events: none;
+            z-index: 20;
+        }
+        .profile { width: 62px; height: 62px; background: #fff; border-radius: 50%; margin-bottom: 14px; box-shadow: 0 6px 14px rgba(0,0,0,0.6); }
+        #dayName { margin: 4px 0; font-size: 15px; color: #dcdcdc; transition: transform 450ms cubic-bezier(.22,.8,.36,1), opacity 450ms; }
+        #time { font-size: 22px; margin: 3px 0; font-weight: 700; color: #ffffff; }
+        /* top marker */
+        .marker {
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 9px solid transparent;
+            border-right: 9px solid transparent;
+            border-bottom: 12px solid rgba(255,255,255,0.22);
+            pointer-events: none;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6));
+            z-index: 30;
+        }
+        /* active label look */
+        .ring span.active {
+            color: #ff4365;
+            font-weight: 800;
+            z-index: 40;
+        }
+        /* small tick dots for date ring */
+        .tick {
+            position: absolute;
+            width: 4px; height: 4px; border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            left: 50%; top: 50%; transform-origin: 0 0; pointer-events: none;
+        }
+        /* animation helper for center label */
+        .pop { transform: translateY(-6px); opacity: 1; }
+        /* subtle responsive scale */
+        @media (max-width:420px){
+            .clock{ width: 320px; height:320px; }
+            .month-ring{ width: 300px; height:300px; }
+            .date-ring{ width: 240px; height:240px; }
+            .center{ width: 140px; height:140px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Clock Modern Way</h1>
+    <div class="clock">
+        <div class="marker" aria-hidden="true"></div>
+        <div class="ring month-ring" id="monthRing"></div>
+        <div class="ring date-ring" id="dateRing"></div>
+        <div class="center">
+            <div class="profile"></div>
+            <p id="dayName"></p>
+            <h2 id="time"></h2>
+            <h3>Hello</h3>
+        </div>
+    </div>
+</div>
+
+<script>
+// Create month & date rings and implement smooth rotation to top (12 o'clock)
+const monthRing = document.getElementById('monthRing');
+const dateRing = document.getElementById('dateRing');
+const dayNameEl = document.getElementById('dayName');
+const timeEl = document.getElementById('time');
+
+const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+// helper: create labels around a ring
+function populateRing(ringEl, items, radius){
+    ringEl.innerHTML = '';
+    const step = 360 / items.length;
+    const spans = [];
+    items.forEach((text, i) => {
+        const span = document.createElement('span');
+        span.textContent = text;
+        // angle where 0deg is at 3 o'clock. We'll place each element then rotate it back to be upright.
+        const angle = i * step;
+        // translate on radius (in px) from center, then rotate so text is upright
+        const base = `rotate(${angle}deg) translate(${radius}px) rotate(${-angle}deg)`;
+        span.style.transform = base;
+        span.dataset.base = base;
+        span.dataset.index = i;
+        ringEl.appendChild(span);
+        spans.push(span);
+    });
+    // initialize rotation data attribute (degrees)
+    ringEl.dataset.rot = '0';
+    return spans;
+}
+
+    const monthSpans = populateRing(monthRing, months, 170);
+    const dateSpans = populateRing(dateRing, Array.from({length:31}, (_,i)=> (i+1).toString()), 130);
+
+    // create small tick dots around date ring to mimic UI
+    function createTicks(parent, count, radius){
+        for(let i=0;i<count;i++){
+            const tick = document.createElement('div');
+            tick.className = 'tick';
+            const angle = i * (360 / count);
+            tick.style.transform = `rotate(${angle}deg) translate(${radius}px)`;
+            parent.appendChild(tick);
+        }
+    }
+    createTicks(dateRing, 31, 140);
+
+// Compute shortest rotation to target degrees and apply
+function rotateRingTo(ringEl, targetDeg){
+    const cur = parseFloat(ringEl.dataset.rot || '0');
+    // compute shortest delta (-180,180]
+    let delta = ((targetDeg - cur + 540) % 360) - 180;
+    const next = cur + delta;
+    ringEl.style.transform = `rotate(${next}deg)`;
+    ringEl.dataset.rot = String(next);
+}
+
+// Convert desired index to target rotation that brings that index to top (12 o'clock).
+// For an item at angle theta (0 at 3 o'clock), we want theta + R = -90deg (12 o'clock),
+// so R = -90 - theta.
+function targetRotationForIndex(index, count){
+    const step = 360 / count;
+    const theta = index * step;
+    return -90 - theta;
+}
+
+// center day animation helper
+function animateDayName(){
+    dayNameEl.classList.remove('pop');
+    // force reflow to restart transition
+    void dayNameEl.offsetWidth;
+    dayNameEl.classList.add('pop');
+}
+
+function updateClock(){
+    const d = new Date();
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
+    const seconds = d.getSeconds();
+
+    const dayIndex = d.getDay();
+    const date = d.getDate();
+    const month = d.getMonth();
+
+    dayNameEl.textContent = dayNames[dayIndex];
+    timeEl.textContent = `${String(hours).padStart(2,'0')}:
+${String(minutes).padStart(2,'0')}:
+${String(seconds).padStart(2,'0')}`.replace(/\n/g,'');
+
+    // rotate month ring so current month comes to top
+    const monthTarget = targetRotationForIndex(month, months.length);
+    rotateRingTo(monthRing, monthTarget);
+
+    // rotate date ring; date indexes are 1..31 so subtract 1
+    const dateIndex = date - 1;
+    const dateTarget = targetRotationForIndex(dateIndex, 31);
+    rotateRingTo(dateRing, dateTarget);
+
+        // highlight active month + date labels
+        monthSpans.forEach(s => {
+            s.classList.remove('active');
+            s.style.transform = s.dataset.base;
+            s.style.zIndex = '';
+        });
+        dateSpans.forEach(s => {
+            s.classList.remove('active');
+            s.style.transform = s.dataset.base;
+            s.style.zIndex = '';
+        });
+        const mSpan = monthSpans[month];
+        if(mSpan){
+            mSpan.classList.add('active');
+            mSpan.style.transform = mSpan.dataset.base + ' scale(1.18)';
+            mSpan.style.zIndex = 50;
+        }
+        const dSpan = dateSpans[dateIndex];
+        if(dSpan){
+            dSpan.classList.add('active');
+            dSpan.style.transform = dSpan.dataset.base + ' scale(1.18)';
+            dSpan.style.zIndex = 50;
+        }
+
+    // animate center day name to draw attention
+    animateDayName();
+
+    // also slightly fade in the active elements for clarity
+    if(mSpan) mSpan.style.opacity = '1';
+    if(dSpan) dSpan.style.opacity = '1';
+}
+
+// initial update and interval
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
