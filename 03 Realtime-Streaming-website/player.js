@@ -152,7 +152,7 @@ class StreamFlowPlayer {
     const listId = parsed.searchParams.get("list");
     // Privacy-enhanced embed; also helps in some cookie-restricted contexts.
     const embed = new URL(
-      `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`
+      `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`,
     );
     // Autoplay may be blocked by the browser, but the player should still load.
     embed.searchParams.set("autoplay", "1");
@@ -174,6 +174,10 @@ class StreamFlowPlayer {
     this.youtubeFrame.classList.remove("hidden");
     this.youtubeFrame.src = embedUrl;
 
+    // Stats are based on the <video> element buffer; YouTube embeds don't expose that.
+    if (this.bufferPercent) this.bufferPercent.textContent = "—";
+    if (this.networkSpeed) this.networkSpeed.textContent = "YouTube";
+
     // The custom controls target the <video> element; hide them for YouTube embeds.
     if (this.controls) this.controls.classList.add("hidden");
     if (this.playOverlay) this.playOverlay.classList.add("hidden");
@@ -187,6 +191,10 @@ class StreamFlowPlayer {
     this.youtubeFrame.classList.add("hidden");
     this.video.classList.remove("hidden");
     if (this.controls) this.controls.classList.remove("hidden");
+
+    // Restore neutral stats; they'll update once the <video> element loads.
+    if (this.bufferPercent) this.bufferPercent.textContent = "0s ahead";
+    if (this.networkSpeed) this.networkSpeed.textContent = "Waiting...";
   }
 
   init() {
@@ -245,13 +253,13 @@ class StreamFlowPlayer {
     // Volume
     this.muteBtn.addEventListener("click", () => this.toggleMute());
     this.volumeSlider.addEventListener("input", (e) =>
-      this.setVolume(e.target.value)
+      this.setVolume(e.target.value),
     );
 
     // Progress Bar
     this.progressContainer.addEventListener("click", (e) => this.seek(e));
     this.progressContainer.addEventListener("mousemove", (e) =>
-      this.updateTooltip(e)
+      this.updateTooltip(e),
     );
 
     // Add drag support for progress bar
@@ -344,10 +352,10 @@ class StreamFlowPlayer {
 
     // Controls visibility
     this.playerContainer.addEventListener("mousemove", () =>
-      this.showControls()
+      this.showControls(),
     );
     this.playerContainer.addEventListener("mouseleave", () =>
-      this.hideControls()
+      this.hideControls(),
     );
 
     // Click to play/pause
@@ -358,10 +366,10 @@ class StreamFlowPlayer {
 
     // Fullscreen change
     document.addEventListener("fullscreenchange", () =>
-      this.onFullscreenChange()
+      this.onFullscreenChange(),
     );
     document.addEventListener("webkitfullscreenchange", () =>
-      this.onFullscreenChange()
+      this.onFullscreenChange(),
     );
   }
 
@@ -387,9 +395,11 @@ class StreamFlowPlayer {
       this.startBufferManagement();
       // Initialize speed status
       this.updateSpeedStatus();
+      // Prime buffer UI immediately (some streams don't fire reliable progress events)
+      this.updateBuffer();
 
       console.log(
-        `Video loaded: ${this.formatTime(this.video.duration)} duration`
+        `Video loaded: ${this.formatTime(this.video.duration)} duration`,
       );
     });
 
@@ -467,7 +477,7 @@ class StreamFlowPlayer {
       const embedUrl = this.buildYouTubeEmbedUrl(detectionUrl);
       if (!embedUrl) {
         this.showError(
-          "This YouTube link can't be parsed. Paste a standard watch URL or youtu.be link."
+          "This YouTube link can't be parsed. Paste a standard watch URL or youtu.be link.",
         );
         return;
       }
@@ -503,7 +513,7 @@ class StreamFlowPlayer {
       const proxyBase =
         window.STREAMFLOW_PROXY_ORIGIN || window.location.origin;
       playbackUrl = `${proxyBase}/proxy?url=${encodeURIComponent(
-        detectionUrl
+        detectionUrl,
       )}`;
       console.log("🔄 Using local proxy server for URL");
     }
@@ -562,7 +572,7 @@ class StreamFlowPlayer {
 
     if (isGoogleUrl) {
       console.log(
-        "🔗 Detected Google video URL - may expire after a few hours"
+        "🔗 Detected Google video URL - may expire after a few hours",
       );
       // Google URLs work better without crossorigin attribute
       this.video.removeAttribute("crossorigin");
@@ -611,7 +621,7 @@ class StreamFlowPlayer {
         }
       } else {
         console.warn(
-          `⚠️ Server doesn't support Range requests - seeking may require re-download`
+          `⚠️ Server doesn't support Range requests - seeking may require re-download`,
         );
         this.showRangeWarning();
       }
@@ -674,7 +684,7 @@ class StreamFlowPlayer {
       });
     } else {
       this.showError(
-        "HLS playback not supported. Please use Safari or add hls.js library."
+        "HLS playback not supported. Please use Safari or add hls.js library.",
       );
     }
   }
@@ -718,7 +728,7 @@ class StreamFlowPlayer {
   showSeekIndicator(seconds) {
     // Create indicator if doesn't exist
     let indicator = document.querySelector(
-      `.seek-indicator.${seconds < 0 ? "left" : "right"}`
+      `.seek-indicator.${seconds < 0 ? "left" : "right"}`,
     );
     if (!indicator) {
       indicator = document.createElement("div");
@@ -753,11 +763,11 @@ class StreamFlowPlayer {
 
       if (this.supportsRangeRequests === false) {
         console.warn(
-          `⚠️ Seeking to ${timeStr} - server may not support Range requests`
+          `⚠️ Seeking to ${timeStr} - server may not support Range requests`,
         );
       } else {
         console.log(
-          `🎯 Seeking to ${timeStr} - requesting chunk via HTTP Range header`
+          `🎯 Seeking to ${timeStr} - requesting chunk via HTTP Range header`,
         );
       }
 
@@ -765,14 +775,14 @@ class StreamFlowPlayer {
       const isGoogleUrl = this.currentUrl.includes("googleusercontent.com");
       if (isGoogleUrl && !isBuffered) {
         console.log(
-          `📥 Note: Google URLs support seeking, but may expire soon`
+          `📥 Note: Google URLs support seeking, but may expire soon`,
         );
       }
     }
 
     this.video.currentTime = Math.max(
       0,
-      Math.min(targetTime, this.video.duration)
+      Math.min(targetTime, this.video.duration),
     );
   }
 
@@ -887,10 +897,16 @@ class StreamFlowPlayer {
   }
 
   updateBuffer() {
-    if (!this.video.duration || this.video.buffered.length === 0) return;
+    if (this.video.buffered.length === 0) {
+      if (this.bufferPercent) this.bufferPercent.textContent = "0s ahead";
+      return;
+    }
 
     const duration = this.video.duration;
-    const currentTime = this.video.currentTime;
+    const hasFiniteDuration = Number.isFinite(duration) && duration > 0;
+    const currentTime = Number.isFinite(this.video.currentTime)
+      ? this.video.currentTime
+      : 0;
     const now = Date.now();
 
     // Track max watched position for history buffer calculation
@@ -931,13 +947,19 @@ class StreamFlowPlayer {
     }
 
     // Update visual buffer bar - show the continuous buffer range around current position
-    const bufferStartPercent = (currentBufferStart / duration) * 100;
-    const bufferEndPercent = (currentBufferEnd / duration) * 100;
+    // If duration is unknown (live/MSE streams), we can't compute meaningful % widths.
+    if (hasFiniteDuration) {
+      const bufferStartPercent = (currentBufferStart / duration) * 100;
+      const bufferEndPercent = (currentBufferEnd / duration) * 100;
 
-    this.progressBuffer.style.left = `${bufferStartPercent}%`;
-    this.progressBuffer.style.width = `${
-      bufferEndPercent - bufferStartPercent
-    }%`;
+      this.progressBuffer.style.left = `${bufferStartPercent}%`;
+      this.progressBuffer.style.width = `${
+        bufferEndPercent - bufferStartPercent
+      }%`;
+    } else {
+      this.progressBuffer.style.left = "0%";
+      this.progressBuffer.style.width = "100%";
+    }
 
     // Update stats display
     const aheadSeconds = Math.round(bufferAhead);
@@ -1004,11 +1026,11 @@ class StreamFlowPlayer {
 
     if (bytesPerSecond >= 1000000) {
       this.networkSpeed.textContent = `${(bytesPerSecond / 1000000).toFixed(
-        1
+        1,
       )} MB/s`;
     } else if (bytesPerSecond >= 1000) {
       this.networkSpeed.textContent = `${(bytesPerSecond / 1000).toFixed(
-        0
+        0,
       )} KB/s`;
     } else if (bytesPerSecond > 0) {
       this.networkSpeed.textContent = `${Math.round(bytesPerSecond)} B/s`;
@@ -1017,7 +1039,10 @@ class StreamFlowPlayer {
 
   // Update speed status when not actively buffering
   updateSpeedStatus() {
-    if (!this.video.duration) return;
+    if (!this.video.src) return;
+
+    const duration = this.video.duration;
+    const hasFiniteDuration = Number.isFinite(duration) && duration > 0;
 
     // Calculate total buffered
     let totalBuffered = 0;
@@ -1026,10 +1051,11 @@ class StreamFlowPlayer {
         this.video.buffered.end(i) - this.video.buffered.start(i);
     }
 
-    const isFullyBuffered = totalBuffered >= this.video.duration - 1;
-    const bufferPercent = Math.round(
-      (totalBuffered / this.video.duration) * 100
-    );
+    const isFullyBuffered =
+      hasFiniteDuration && totalBuffered >= this.video.duration - 1;
+    const bufferPercent = hasFiniteDuration
+      ? Math.round((totalBuffered / this.video.duration) * 100)
+      : null;
 
     // Update based on current state
     if (isFullyBuffered) {
@@ -1038,7 +1064,9 @@ class StreamFlowPlayer {
       this.bufferIndicator.classList.remove("active");
     } else if (this.networkSpeedSamples.length === 0) {
       // No speed data yet, show buffer progress
-      this.networkSpeed.textContent = `${bufferPercent}% loaded`;
+      this.networkSpeed.textContent = hasFiniteDuration
+        ? `${bufferPercent}% loaded`
+        : `${Math.round(totalBuffered)}s buffered`;
       this.networkSpeed.style.color = "";
     }
   }
@@ -1064,10 +1092,11 @@ class StreamFlowPlayer {
   }
 
   manageBuffer() {
-    if (!this.video.duration || !this.video.src) return;
+    if (!this.video.src) return;
 
     const currentTime = this.video.currentTime;
     const duration = this.video.duration;
+    const hasFiniteDuration = Number.isFinite(duration) && duration > 0;
 
     // Calculate required history buffer (10% of max watched position)
     const requiredHistoryBuffer =
@@ -1090,7 +1119,8 @@ class StreamFlowPlayer {
     }
 
     // Check if still buffering (not fully loaded)
-    const isFullyBuffered = totalBuffered >= duration - 0.5;
+    const isFullyBuffered =
+      hasFiniteDuration && totalBuffered >= duration - 0.5;
     const needsMoreBuffer =
       bufferAhead < this.targetBufferAhead && !isFullyBuffered;
 
@@ -1111,6 +1141,10 @@ class StreamFlowPlayer {
 
     // Update speed status display
     this.updateSpeedStatus();
+
+    // Keep buffer UI and speed estimation moving even if the browser doesn't
+    // emit frequent 'progress' events (common with some MSE/HLS/DASH flows).
+    this.updateBuffer();
   }
 
   encourageBuffering() {
@@ -1124,14 +1158,19 @@ class StreamFlowPlayer {
     // This is a hint to the browser that we care about buffering
     if (this.video.buffered.length > 0) {
       const lastBufferedEnd = this.video.buffered.end(
-        this.video.buffered.length - 1
+        this.video.buffered.length - 1,
       );
       // Log buffer status for debugging
-      console.debug(
-        `Buffer: ${lastBufferedEnd.toFixed(1)}s / ${this.video.duration.toFixed(
-          1
-        )}s`
-      );
+      const duration = this.video.duration;
+      if (Number.isFinite(duration) && duration > 0) {
+        console.debug(
+          `Buffer: ${lastBufferedEnd.toFixed(1)}s / ${duration.toFixed(1)}s`,
+        );
+      } else {
+        console.debug(
+          `Buffer: ${lastBufferedEnd.toFixed(1)}s (duration unknown)`,
+        );
+      }
     }
   }
 
@@ -1190,7 +1229,7 @@ class StreamFlowPlayer {
       document.querySelectorAll(".speed-option").forEach((option) => {
         option.classList.toggle(
           "active",
-          parseFloat(option.dataset.speed) === speed
+          parseFloat(option.dataset.speed) === speed,
         );
       });
 
