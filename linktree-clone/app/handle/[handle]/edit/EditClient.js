@@ -19,6 +19,8 @@ const EditClient = ({ initial }) => {
   const [pic, setPic] = useState(initial?.pic || "");
   const [desc, setDesc] = useState(initial?.desc || "");
   const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const handleChange = (index, nextLink, nextText) => {
     setLinks((prev) =>
@@ -67,6 +69,41 @@ const EditClient = ({ initial }) => {
       toast.error("Update failed");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const submitDelete = async () => {
+    if (deleteConfirm !== handle) {
+      toast.error("Type the handle to confirm delete");
+      return;
+    }
+
+    const ok = window.confirm(
+      `This will permanently delete @${handle}. This cannot be undone. Continue?`,
+    );
+    if (!ok) return;
+
+    setDeleting(true);
+    try {
+      const r = await fetch("/api/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle }),
+      });
+      const result = await r.json();
+
+      if (result?.success) {
+        toast.success(result?.message || "Deleted");
+        setTimeout(() => {
+          router.push("/handle");
+        }, 600);
+      } else {
+        toast.error(result?.message || "Delete failed");
+      }
+    } catch (e) {
+      toast.error("Delete failed");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -162,6 +199,34 @@ const EditClient = ({ initial }) => {
                       Back
                     </button>
                   </div>
+                </div>
+              </div>
+
+              <div className="item">
+                <h2 className="font-semibold text-xl text-red-900">
+                  Danger Zone
+                </h2>
+                <p className="mt-1 text-sm text-gray-800">
+                  Permanent delete: this will remove the handle and all links.
+                </p>
+
+                <div className="mt-3 space-y-3">
+                  <input
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                    className="ui-input"
+                    type="text"
+                    placeholder={`Type ${handle} to confirm`}
+                  />
+
+                  <button
+                    type="button"
+                    disabled={deleting || deleteConfirm !== handle}
+                    onClick={submitDelete}
+                    className="ui-btn-primary font-bold disabled:bg-slate-500 cursor-pointer bg-red-700 hover:bg-red-800"
+                  >
+                    {deleting ? "Deleting..." : "Delete permanently"}
+                  </button>
                 </div>
               </div>
             </div>
