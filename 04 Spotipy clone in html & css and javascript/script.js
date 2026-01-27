@@ -9,6 +9,12 @@ function secondsToMinutesSeconds(seconds) {
   return `${formattedMinutes}:${formattedSeconds}`;
 }
 
+function getSongSrc(language, fileName) {
+  const lang = String(language || "").toLowerCase();
+  // Keep path relative so it works on Live Server and folder hosting
+  return `songs/${lang}/${encodeURIComponent(fileName)}`;
+}
+
 async function getSongs(language) {
   try {
     const response = await fetch("songs.json");
@@ -16,9 +22,16 @@ async function getSongs(language) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    return data[language] || [];
+    const lang = String(language || "").toLowerCase();
+    return data[lang] || [];
   } catch (error) {
     console.error("Error fetching songs:", error);
+
+    if (location.protocol === "file:") {
+      console.warn(
+        "You're opening this with file://. fetch('songs.json') will be blocked; run using a local server (e.g., VS Code Live Server).",
+      );
+    }
     return [];
   }
 }
@@ -38,14 +51,15 @@ async function domContentLoadedHandler() {
 
   // Initial song list population
   async function populateSongList(language) {
-  songs = await getSongs(language);
-  // Songs ke alphabetically sort kore nebo
-  songs.sort((a, b) => a.localeCompare(b));
-    if (language === "hindi") {
+    const lang = String(language || "").toLowerCase();
+    songs = await getSongs(lang);
+    // Songs ke alphabetically sort kore nebo
+    songs.sort((a, b) => a.localeCompare(b));
+    if (lang === "hindi") {
       hindiSongs = [...songs];
-    } else if (language === "narayana") {
+    } else if (lang === "narayana") {
       narayanaSong = [...songs];
-    } else if (language === "shiv") {
+    } else if (lang === "shiv") {
       shivSong = [...songs];
     } else {
       bengaliSongs = [...songs];
@@ -62,7 +76,7 @@ async function domContentLoadedHandler() {
       li.innerHTML = `
             <img src="svg/music.svg" alt="" />
             <div class="info">
-                <div>${song.replaceAll("%20", " ").replace(".mp3", "")}</div>
+          <div>${decodeURIComponent(song).replace(".mp3", "")}</div>
                 <div>Artist:-DEEP</div>
             </div>
             <div class="playnow">
@@ -73,29 +87,31 @@ async function domContentLoadedHandler() {
       songUL.appendChild(li);
     });
 
+    if (songs.length > 0 && songs[0]) {
+      const firstSong = songs[0];
+      currentSong.src = getSongSrc(currentLanguage, firstSong);
+      playsong.src = "svg/playbar.svg";
+      document.querySelector(".songinfo").innerHTML = firstSong
+        .split("/")
+        .slice(-1)[0];
+      document.querySelector(".songtime").innerHTML = "00:00";
 
-if (songs.length > 0 && songs[0]) {
-  const firstSong = songs[0];
-  currentSong.src = `/songs/${currentLanguage}/${firstSong}`;
-  playsong.src = "svg/playbar.svg";
-  document.querySelector(".songinfo").innerHTML = firstSong
-    .split("/")
-    .slice(-1)[0];
-  document.querySelector(".songtime").innerHTML = "00:00";
-
-  const firstPlayIcon = document.querySelector(
-    ".songlist li:nth-child(1) .play-icon"
-  );
-  if (firstPlayIcon) {
-    firstPlayIcon.src = "svg/playbar.svg";
-    currentPlayIcon = firstPlayIcon;
+      const firstPlayIcon = document.querySelector(
+        ".songlist li:nth-child(1) .play-icon",
+      );
+      if (firstPlayIcon) {
+        firstPlayIcon.src = "svg/playbar.svg";
+        currentPlayIcon = firstPlayIcon;
+      }
+    } else {
+      console.warn(`⚠️ No songs found for language: ${currentLanguage}`);
+      document.querySelector(".songinfo").innerHTML =
+        location.protocol === "file:"
+          ? "Run using Live Server (fetch blocked on file://)"
+          : "No songs available";
+      document.querySelector(".songtime").innerHTML = "--:--";
+    }
   }
-} else {
-  console.warn(`⚠️ No songs found for language: ${currentLanguage}`);
-  document.querySelector(".songinfo").innerHTML = "No songs available";
-  document.querySelector(".songtime").innerHTML = "--:--";
-}}
-
 
   // Load default language
   populateSongList(currentLanguage);
@@ -104,19 +120,24 @@ if (songs.length > 0 && songs[0]) {
     if (currentPlayIcon && currentPlayIcon !== playIcon) {
       currentPlayIcon.src = "svg/playbar.svg";
     }
-    currentPlayIcon = playIcon;
-    currentSong.src = `/songs/${currentLanguage}/${track}`;
-    currentSong.play().catch((err) =>
-      console.warn("Playback failed:", err)
-    );
+    currentPlayIcon = playIcon || null;
+    currentSong.src = getSongSrc(currentLanguage, track);
+    currentSong.play().catch((err) => console.warn("Playback failed:", err));
     playsong.src = "svg/pause.svg";
     document.querySelector(".songinfo").innerHTML = track
       .split("/")
       .slice(-1)[0];
     document.querySelector(".songtime").innerHTML = "00.00";
-    playIcon.src = "svg/pause.svg";
+    if (playIcon && playIcon.tagName === "IMG") {
+      playIcon.src = "svg/pause.svg";
+    }
     console.log(track);
   };
+
+  currentSong.addEventListener("error", () => {
+    console.error("Audio error:", currentSong.error, "src:", currentSong.src);
+    document.querySelector(".songtime").innerHTML = "Error";
+  });
 
   // Event delegation for song list
   document.querySelector(".songlist").addEventListener("click", (e) => {
@@ -126,7 +147,7 @@ if (songs.length > 0 && songs[0]) {
         target.querySelector(".info div").textContent.trim() + ".mp3";
       const playIcon = target.querySelector(".playnow .play-icon");
       const trackToPlay = songs.find(
-        (song) => song && song.includes(trackName)
+        (song) => song && song.includes(trackName),
       );
       if (trackToPlay) {
         playMusic(trackToPlay, playIcon);
@@ -136,66 +157,17 @@ if (songs.length > 0 && songs[0]) {
 
   Array.from(document.querySelectorAll(".card")).forEach((card) => {
     card.addEventListener("click", async () => {
-      const songName = card.getAttribute("data-song");
-      const playIcon = card.querySelector(".play svg");
-      let songToPlay;
+      const lang = String(card.dataset.language || "").toLowerCase();
+      if (!lang) return;
 
-      if (songName === "combined_songs") {
-        if (!combinedSongsLoaded) {
-          await Promise.all([
-            populateSongList("hindi"),
-            populateSongList("bengali"),
-            populateSongList("narayana"),
-            populateSongList("shiv"),
-          ]);
-          bothLanguagesLoaded = true;
-          combinedSongsLoaded = true;
-        }
-        songToPlay = songs[0];
-      } else if (songName === "hindi") {
-        currentLanguage = "hindi";
-        if (!bothLanguagesLoaded) {
-          await populateSongList("hindi");
-          bothLanguagesLoaded = true;
-        }
-        songs = hindiSongs;
-        songToPlay = hindiSongs[0];
-      } else if (songName === "bengali") {
-        currentLanguage = "bengali";
-        if (!bothLanguagesLoaded) {
-          await populateSongList("bengali");
-          bothLanguagesLoaded = true;
-        }
-        songs = bengaliSongs;
-        songToPlay = bengaliSongs[0];
-      } else if (songName === "narayana") {
-        currentLanguage = "narayana";
-        if (!bothLanguagesLoaded) {
-          await populateSongList("narayana");
-          bothLanguagesLoaded = true;
-        }
-        songs = narayanaSong;
-        songToPlay = narayanaSong[0];
-      } else if (songName === "shiv") {
-        currentLanguage = "shiv";
-        if (!bothLanguagesLoaded) {
-          await populateSongList("shiv");
-          bothLanguagesLoaded = true;
-        }
-        songs = shivSong;
-        songToPlay = shivSong[0];
-      } else {
-        const clickedCard = card;
-        if (clickedCard) {
-          const trackName = songName + ".mp3";
-          songToPlay = songs.find(
-            (song) => song && song.includes(trackName)
-          );
-        }
-      }
+      currentLanguage = lang;
+      await populateSongList(currentLanguage);
 
-      if (songToPlay) {
-        playMusic(songToPlay, playIcon);
+      if (songs.length > 0) {
+        const firstSongElement = document.querySelector(
+          `.songlist li:nth-child(1) .play-icon`,
+        );
+        playMusic(songs[0], firstSongElement);
       }
     });
   });
@@ -203,9 +175,7 @@ if (songs.length > 0 && songs[0]) {
   // Play/Pause button
   playsong.addEventListener("click", () => {
     if (currentSong.paused) {
-      currentSong.play().catch((err) =>
-        console.warn("Playback failed:", err)
-      );
+      currentSong.play().catch((err) => console.warn("Playback failed:", err));
       playsong.src = "svg/pause.svg";
       if (currentPlayIcon) {
         currentPlayIcon.src = "svg/pause.svg";
@@ -227,9 +197,9 @@ if (songs.length > 0 && songs[0]) {
         if (currentPlayIcon && currentPlayIcon !== icon) {
           currentPlayIcon.src = "svg/playbar.svg";
         }
-        currentSong.play().catch((err) =>
-          console.warn("Playback failed:", err)
-        );
+        currentSong
+          .play()
+          .catch((err) => console.warn("Playback failed:", err));
         icon.src = "svg/pause.svg";
         playsong.src = "svg/pause.svg";
         currentPlayIcon = icon;
@@ -244,7 +214,7 @@ if (songs.length > 0 && songs[0]) {
   // Time update
   currentSong.addEventListener("timeupdate", () => {
     document.querySelector(".songtime").innerHTML = `${secondsToMinutesSeconds(
-      currentSong.currentTime
+      currentSong.currentTime,
     )} / ${secondsToMinutesSeconds(currentSong.duration)}`;
 
     document.querySelector(".circle").style.left =
@@ -277,7 +247,7 @@ if (songs.length > 0 && songs[0]) {
     if (index - 1 >= 0) {
       const prevSong = songs[index - 1];
       const prevSongElement = document.querySelector(
-        `.songlist li:nth-child(${index}) .play-icon`
+        `.songlist li:nth-child(${index}) .play-icon`,
       );
       playMusic(prevSong, prevSongElement);
     }
@@ -289,7 +259,7 @@ if (songs.length > 0 && songs[0]) {
     if (index + 1 < songs.length) {
       const nextSong = songs[index + 1];
       const nextSongElement = document.querySelector(
-        `.songlist li:nth-child(${index + 2}) .play-icon`
+        `.songlist li:nth-child(${index + 2}) .play-icon`,
       );
       playMusic(nextSong, nextSongElement);
     }
@@ -301,13 +271,13 @@ if (songs.length > 0 && songs[0]) {
     if (index + 1 < songs.length) {
       const nextSong = songs[index + 1];
       const nextSongElement = document.querySelector(
-        `.songlist li:nth-child(${index + 2}) .play-icon`
+        `.songlist li:nth-child(${index + 2}) .play-icon`,
       );
       playMusic(nextSong, nextSongElement);
     } else {
       const firstSong = songs[0];
       const firstSongElement = document.querySelector(
-        `.songlist li:nth-child(1) .play-icon`
+        `.songlist li:nth-child(1) .play-icon`,
       );
       playMusic(firstSong, firstSongElement);
     }
